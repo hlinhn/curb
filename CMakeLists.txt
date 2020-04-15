@@ -12,6 +12,8 @@ find_package(catkin REQUIRED
   grid_map_core
   pcl_conversions
   grid_map_ros
+  message_filters
+  tf
   )
 find_package(PCL REQUIRED)
 
@@ -136,10 +138,11 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/generate_curb.cpp)
-add_executable(downsample src/downsample.cpp)
-add_executable(outlier src/outlier.cpp)
-add_executable(make_ground src/make_ground.cpp)
+#add_executable(${PROJECT_NAME}_node src/generate_curb.cpp)
+#add_executable(downsample src/downsample.cpp)
+#add_executable(outlier src/outlier.cpp)
+#add_executable(make_ground src/make_ground.cpp)
+add_executable(aggregate src/aggregate.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,22 +155,27 @@ add_executable(make_ground src/make_ground.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
 
-target_link_libraries(downsample
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
+# target_link_libraries(downsample
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
 
-target_link_libraries(outlier
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-  )
+# target_link_libraries(outlier
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
 
-target_link_libraries(make_ground
+# target_link_libraries(make_ground
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   )
+
+target_link_libraries(aggregate
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   )
