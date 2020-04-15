@@ -48,7 +48,7 @@ void createGround(CloudT::Ptr ground) {
   cmax = minmax.second;
   
   grid_map::GridMap map;
-  map.setGeometry(grid_map::Length(cmax.x - cmin.x, cmax.y - cmin.y), 0.1);
+  map.setGeometry(grid_map::Length(cmax.x - cmin.x, cmax.y - cmin.y), 0.05);
   map.add("orig");
   map.add("median");
 
@@ -80,7 +80,7 @@ void createGround(CloudT::Ptr ground) {
     std::sort(cell_points_ordered.begin(), cell_points_ordered.end());
     data(i) = cell_points_ordered[cell_points_ordered.size() / 2];
   }
-  
+
   grid_map::Matrix& med_data = map["median"];
   std::vector<float> non_nan;
   non_nan.reserve(7 * 7);
@@ -116,7 +116,7 @@ void createGround(CloudT::Ptr ground) {
     const size_t linear_index = iterator.getLinearIndex();
     med_data(linear_index) = *median_it_position;
   }
-
+/*
   sensor_msgs::PointCloud2Ptr points = boost::make_shared<sensor_msgs::PointCloud2>();
   grid_map::GridMapRosConverter::toPointCloud(map, "median", *points);
 
@@ -129,6 +129,18 @@ void createGround(CloudT::Ptr ground) {
     std::cout << "Couldn't save\n"; 
     return;
   }
+*/
+
+  CloudT::Ptr marked_ground(new CloudT());
+  for (const auto& p : *ground) {
+    grid_map::Position pos(p.x - adjust.x, p.y - adjust.y);
+    if (!map.isInside(pos)) continue;
+    grid_map::Index index;
+    map.getIndex(pos, index);
+    size_t linear_index = grid_map::getLinearIndexFromIndex(index, map.getSize());
+    if (fabs(p.z - med_data(linear_index)) < 0.03) marked_ground->points.push_back(p);
+  }
+  pcl::io::savePCDFileBinary("marked_ground.pcd", *marked_ground);
 }
 
 int main(int argc, char* argv[]) {
