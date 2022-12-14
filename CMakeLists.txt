@@ -21,34 +21,10 @@ include_directories(
  ${PCL_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME}_generate src/generate_curb.cpp)
-add_executable(${PROJECT_NAME}_downsample src/downsample.cpp)
-add_executable(${PROJECT_NAME}_outlier src/outlier.cpp)
-add_executable(${PROJECT_NAME}_make_ground src/make_ground.cpp)
 add_executable(${PROJECT_NAME}_aggregate src/aggregate.cpp src/helper.cpp)
 
 target_link_libraries(${PROJECT_NAME}_aggregate
   yaml-cpp
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-target_link_libraries(${PROJECT_NAME}_generate
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-target_link_libraries(${PROJECT_NAME}_downsample
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-target_link_libraries(${PROJECT_NAME}_outlier
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-target_link_libraries(${PROJECT_NAME}_make_ground
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )

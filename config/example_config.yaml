@@ -1,0 +1,18 @@
+factor: 7.0
+method: "normal"
+max_z: 2.0
+min_z: -1.0
+normal:
+  subsample: 0.2
+  ksearch: 30
+  normal_z_upper: 0.8
+  normal_z_lower: -0.8
+  normal_cur_upper: 10
+  normal_cur_lower: 0.01
+image:
+  half_size: 30.0
+  resolution: 0.1
+  min_num: 5
+  max: 0.25
+  min: 0.08
+  threshold: 150

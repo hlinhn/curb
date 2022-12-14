@@ -11,6 +11,7 @@ Aggregate::Aggregate(ros::NodeHandle nh)
   ros::NodeHandle nh_params("~");
 
   nh_params.param("frame_id", frame_id_, std::string("odom"));
+  nh_params.param("robot_frame", robot_frame_, std::string("base_link"));
   std::string param_file_name;
   nh_params.param("param_file", param_file_name, std::string(""));
   param_ = readParamFile(param_file_name);
@@ -134,11 +135,15 @@ Aggregate::findCurbWithImage(Cloud::Ptr cloud, cv::Point2d pose)
 void
 Aggregate::pointCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-  Cloud::Ptr cloud(new Cloud());
+  Cloud::Ptr cloud(new Cloud);
   pcl::fromROSMsg(*msg, *cloud);
-  Cloud::Ptr transformed(new Cloud());
+  Cloud::Ptr transformed_to_robot(new Cloud);
 
-  pcl_ros::transformPointCloud<Point>(frame_id_, *cloud, *transformed, tf_);
+  pcl_ros::transformPointCloud<Point>(robot_frame_, *cloud, *transformed_to_robot, tf_);
+  auto filtered_by_height = removeHighZ(transformed_to_robot, param_.min_z, param_.max_z);
+
+  Cloud::Ptr transformed(new Cloud);
+  pcl_ros::transformPointCloud<Point>(frame_id_, *filtered_by_height, *transformed, tf_);
   *aggregated_cloud_ += *transformed;
   if (aggregated_cloud_->points.size() > transformed->points.size() * param_.factor)
   {
@@ -167,7 +172,7 @@ Aggregate::pointCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
     tf::StampedTransform base_pose;
     try
     {
-      tf_.lookupTransform(frame_id_, "base_link", msg->header.stamp, base_pose);
+      tf_.lookupTransform(frame_id_, robot_frame_, msg->header.stamp, base_pose);
     }
     catch (tf::TransformException& ex)
     {

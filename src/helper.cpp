@@ -1,4 +1,5 @@
 #include <curb/helper.h>
+#include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/random_sample.h>
 #include <sys/types.h>
 #include <yaml-cpp/yaml.h>
@@ -10,6 +11,9 @@ readParamFile(std::string file_name)
   const auto yaml = YAML::LoadFile(file_name);
   param.factor = yaml["factor"].as<double>();
   param.method = yaml["method"].as<std::string>();
+
+  param.min_z = yaml["min_z"].as<double>();
+  param.max_z = yaml["max_z"].as<double>();
 
   param.normal_sample = yaml["normal"]["subsample"].as<double>();
   param.normal_ksearch = yaml["normal"]["ksearch"].as<int>();
@@ -36,4 +40,22 @@ subsample(Cloud::Ptr input, double ratio)
   extract.setSample(int(input->size() * ratio));
   extract.filter(*subsampled);
   return subsampled;
+}
+
+Cloud::Ptr
+removeHighZ(Cloud::Ptr cloud, double min, double max)
+{
+  Cloud::Ptr filtered(new Cloud);
+  pcl::ConditionalRemoval<Point> condrem;
+  pcl::ConditionAnd<Point>::Ptr cond(new pcl::ConditionAnd<Point>());
+  cond->addComparison(
+      pcl::FieldComparison<Point>::ConstPtr(new pcl::FieldComparison<Point>("z", pcl::ComparisonOps::GT, min)));
+  cond->addComparison(
+      pcl::FieldComparison<Point>::ConstPtr(new pcl::FieldComparison<Point>("z", pcl::ComparisonOps::LT, max)));
+
+  condrem.setCondition(cond);
+  condrem.setInputCloud(cloud);
+  condrem.setKeepOrganized(true);
+  condrem.filter(*filtered);
+  return filtered;
 }

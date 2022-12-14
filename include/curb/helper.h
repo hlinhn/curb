@@ -11,6 +11,8 @@ struct CurbAggregateParam
 {
   double factor;
   std::string method;
+  double min_z;
+  double max_z;
   double normal_sample;
   int normal_ksearch;
   double normal_z_upper;
@@ -27,6 +29,7 @@ struct CurbAggregateParam
 };
 
 Cloud::Ptr subsample(Cloud::Ptr cloud, double ratio);
+Cloud::Ptr removeHighZ(Cloud::Ptr cloud, double min, double max);
 CurbAggregateParam readParamFile(std::string file_name);
 
 #endif

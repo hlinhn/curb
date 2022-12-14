@@ -15,6 +15,7 @@ class Aggregate
 {
 private:
   std::string frame_id_;
+  std::string robot_frame_;
   CurbAggregateParam param_;
   Cloud::Ptr aggregated_cloud_;
 
