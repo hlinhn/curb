@@ -1,5 +1,6 @@
 #include <curb/helper.h>
 #include <pcl/filters/random_sample.h>
+#include <sys/types.h>
 #include <yaml-cpp/yaml.h>
 
 CurbAggregateParam
@@ -17,6 +18,12 @@ readParamFile(std::string file_name)
   param.normal_cur_upper = yaml["normal"]["normal_cur_upper"].as<double>();
   param.normal_cur_lower = yaml["normal"]["normal_cur_lower"].as<double>();
 
+  param.image_half_size = yaml["image"]["half_size"].as<double>();
+  param.image_resolution = yaml["image"]["resolution"].as<double>();
+  param.image_min_num = yaml["image"]["min_num"].as<int>();
+  param.image_max = yaml["image"]["max"].as<double>();
+  param.image_min = yaml["image"]["min"].as<double>();
+  param.image_threshold = yaml["image"]["threshold"].as<double>();
   return param;
 }
 

@@ -11,6 +11,10 @@ Aggregate::Aggregate(ros::NodeHandle nh)
   ros::NodeHandle nh_params("~");
 
   nh_params.param("frame_id", frame_id_, std::string("odom"));
+  std::string param_file_name;
+  nh_params.param("param_file", param_file_name, std::string(""));
+  param_ = readParamFile(param_file_name);
+
   cloud_sub_.subscribe(nh, "input", 1);
   tf_filter_ = new tf::MessageFilter<sensor_msgs::PointCloud2>(cloud_sub_, tf_, frame_id_, 10);
   tf_filter_->registerCallback(boost::bind(&Aggregate::pointCallback, this, _1));
@@ -54,6 +58,79 @@ Aggregate::findCurbWithNormal(Cloud::Ptr cloud)
   return curb;
 }
 
+Cloud::Ptr
+Aggregate::findCurbWithImage(Cloud::Ptr cloud, cv::Point2d pose)
+{
+  cv::Point2d min_point(pose.x - param_.image_half_size, pose.y - param_.image_half_size);
+
+  unsigned int size = std::ceil(param_.image_half_size * 2 / param_.image_resolution);
+
+  cv::Mat min_image(size, size, CV_64FC1, cv::Scalar(0));
+  cv::Mat max_image(size, size, CV_64FC1, cv::Scalar(0));
+  cv::Mat count_image(size, size, CV_64FC1, cv::Scalar(0));
+
+  for (const auto p : *cloud)
+  {
+    int x = std::ceil((p.x - min_point.x) / param_.image_resolution);
+    int y = std::ceil((p.y - min_point.y) / param_.image_resolution);
+    if (x < 0 || x >= size || y < 0 || y >= size)
+    {
+      continue;
+    }
+    if (count_image.at<double>(x, y) < 1)
+    {
+      min_image.at<double>(x, y) = p.z;
+      max_image.at<double>(x, y) = p.z;
+      count_image.at<double>(x, y) = 1;
+    }
+    else
+    {
+      if (p.z < min_image.at<double>(x, y))
+      {
+        min_image.at<double>(x, y) = p.z;
+      }
+      if (p.z > max_image.at<double>(x, y))
+      {
+        max_image.at<double>(x, y) = p.z;
+      }
+      count_image.at<double>(x, y) += 1;
+    }
+  }
+
+  cv::Mat bindiff(size, size, CV_8UC1, cv::Scalar(255));
+  for (int i = 0; i < size; i++)
+  {
+    for (int j = 0; j < size; j++)
+    {
+      if (count_image.at<double>(i, j) < param_.image_min_num)
+      {
+        continue;
+      }
+      auto diff = max_image.at<double>(i, j) - min_image.at<double>(i, j);
+      if (diff < param_.image_max && diff > param_.image_min)
+      {
+        bindiff.at<unsigned char>(i, j) = 255 - (diff - param_.image_min) / (param_.image_max - param_.image_min) * 255;
+      }
+    }
+  }
+
+  Cloud::Ptr curb_cloud(new Cloud);
+  for (const auto p : *cloud)
+  {
+    int x = std::ceil((p.x - min_point.x) / param_.image_resolution);
+    int y = std::ceil((p.y - min_point.y) / param_.image_resolution);
+    if (x < 0 || x >= size || y < 0 || y >= size)
+    {
+      continue;
+    }
+    if (bindiff.at<unsigned char>(x, y) < param_.image_threshold)
+    {
+      curb_cloud->points.push_back(p);
+    }
+  }
+  return curb_cloud;
+}
+
 void
 Aggregate::pointCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
@@ -79,6 +156,28 @@ Aggregate::pointCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
   {
     auto curb_cloud = findCurbWithNormal(aggregated_cloud_);
     sensor_msgs::PointCloud2 curb_msg;
+    pcl::toROSMsg(*curb_cloud, curb_msg);
+    curb_msg.header = msg->header;
+    curb_msg.header.frame_id = frame_id_;
+    curb_pub_.publish(curb_msg);
+  }
+
+  if (param_.method.compare(std::string("image")) == 0)
+  {
+    tf::StampedTransform base_pose;
+    try
+    {
+      tf_.lookupTransform(frame_id_, "base_link", msg->header.stamp, base_pose);
+    }
+    catch (tf::TransformException& ex)
+    {
+      ROS_ERROR("%s", ex.what());
+      return;
+    }
+    cv::Point2d current_position(base_pose.getOrigin().x(), base_pose.getOrigin().y());
+    auto curb_cloud = findCurbWithImage(aggregated_cloud_, current_position);
+    sensor_msgs::PointCloud2 curb_msg;
+    pcl::toROSMsg(*curb_cloud, curb_msg);
     curb_msg.header = msg->header;
     curb_msg.header.frame_id = frame_id_;
     curb_pub_.publish(curb_msg);

@@ -17,6 +17,13 @@ struct CurbAggregateParam
   double normal_z_lower;
   double normal_cur_upper;
   double normal_cur_lower;
+
+  double image_half_size;
+  double image_resolution;
+  int image_min_num;
+  double image_max;
+  double image_min;
+  double image_threshold;
 };
 
 Cloud::Ptr subsample(Cloud::Ptr cloud, double ratio);

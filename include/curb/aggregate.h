@@ -3,6 +3,7 @@
 
 #include <curb/helper.h>
 #include <message_filters/subscriber.h>
+#include <opencv2/opencv.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/point_cloud.h>
 #include <ros/ros.h>
@@ -24,6 +25,7 @@ private:
   tf::MessageFilter<sensor_msgs::PointCloud2>* tf_filter_;
 
   Cloud::Ptr findCurbWithNormal(Cloud::Ptr cloud);
+  Cloud::Ptr findCurbWithImage(Cloud::Ptr cloud, cv::Point2d pose);
   void pointCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
 public:
