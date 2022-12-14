@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
   tf
 )
 find_package(PCL REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 catkin_package(
 )
@@ -24,9 +25,10 @@ add_executable(${PROJECT_NAME}_generate src/generate_curb.cpp)
 add_executable(${PROJECT_NAME}_downsample src/downsample.cpp)
 add_executable(${PROJECT_NAME}_outlier src/outlier.cpp)
 add_executable(${PROJECT_NAME}_make_ground src/make_ground.cpp)
-add_executable(${PROJECT_NAME}_aggregate src/aggregate.cpp)
+add_executable(${PROJECT_NAME}_aggregate src/aggregate.cpp src/helper.cpp)
 
 target_link_libraries(${PROJECT_NAME}_aggregate
+  yaml-cpp
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
